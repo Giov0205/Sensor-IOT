@@ -1,0 +1,147 @@
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 600px;
+  background: linear-gradient(90deg, #ff5f6d, #ffc3a0);
+  padding: 3rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+  animation-delay: 0.5s;
+  min-height: 100vh;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.5rem;
+  color: #ff5f6d;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+label {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.input-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #ff5f6d;
+  position: absolute;
+  left: 10px;
+}
+
+input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  padding-left: 2.5rem;
+  border-radius: 8px;
+  border: 2px solid #ff5f6d;
+  font-size: 1.1rem;
+  outline: none;
+  transition: border-color 0.3s ease-in-out;
+}
+
+input:focus {
+  border-color: #ffc3a0;
+}
+
+input:invalid {
+  border-color: #ff0000;
+}
+
+button {
+  background-color: #ff5f6d;
+  color: white;
+  padding: 1rem;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+button:hover {
+  background-color: #ffc3a0;
+}
+
+span {
+  font-size: 0.9rem;
+  color: #ff0000;
+  margin-top: 0.5rem;
+}
+
+/* Enlaces adicionales en Register */
+.register-link, .login-link {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.register-link a,
+.login-link a {
+  color: #ff5f6d;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.register-link a:hover,
+.login-link a:hover {
+  text-decoration: underline;
+}
+
+@media screen and (max-width: 500px) {
+  .login-container {
+    padding: 1.5rem;
+    width: 90%;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  input, button {
+    font-size: 1rem;
+  }
+}
