@@ -1,100 +1,112 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
 import {
-  LineChart,
-  Line,
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ReferenceArea,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer
+  type TooltipProps,
 } from 'recharts';
+import {
+  NIVELES,
+  UMBRAL_PELIGRO,
+  UMBRAL_PRECAUCION,
+  VOLTAJE_MAX,
+  aPorcentaje,
+  formatoHora,
+  nivelDe,
+  voltajeDeUmbral,
+  type Lectura,
+} from '../lib/niveles';
 
-interface SensorDato {
-  timestamp: string;
-  voltage: number;
+interface Props {
+  datos: Lectura[]; // de la más antigua a la más reciente
+  compacta?: boolean;
 }
 
-const GraficaSensor = () => {
-  const [datos, setDatos] = useState<SensorDato[]>([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get('http://10.1.1.83:4000/api/sensores');
-        const ultimos = res.data.slice(0, 10).reverse();
-        setDatos(ultimos);
-      } catch (err) {
-        console.error('Error al obtener datos del sensor:', err);
-      }
-    };
-
-    fetchData();
-    const intervalo = setInterval(fetchData, 10000);
-    return () => clearInterval(intervalo);
-  }, []);
-
-  return (
-    <div
-      style={{
-        width: '100%',
-        maxWidth: '900px',
-        height: '400px',
-        margin: '40px auto',
-        background: '#fff',
-        borderRadius: '16px',
-        boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
-        padding: '20px',
-        boxSizing: 'border-box'
-      }}
-    >
-      <h2 style={{ color: '#1e293b', marginBottom: '20px', textAlign: 'center' }}>
-        Histórico
-      </h2>
-
-      <div style={{ width: '100%', height: 'calc(100% - 50px)' }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={datos}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="timestamp"
-              tick={{ fontSize: 11 }}
-              interval={0}
-              angle={-30}
-              textAnchor="end"
-              height={50}
-              tickFormatter={(tick) =>
-                new Intl.DateTimeFormat('es-MX', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  hour12: false,
-                }).format(new Date(tick))
-              }
-            />
-            <YAxis domain={[0, 3.5]} tick={{ fontSize: 12 }} />
-            <Tooltip
-              formatter={(value: any) => `${value} V`}
-              labelFormatter={(label) =>
-                new Intl.DateTimeFormat('es-MX', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false,
-                }).format(new Date(label))
-              }
-            />
-            <Line
-              type="monotone"
-              dataKey="voltage"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              dot={{ r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
+// Mismos valores que los tokens (Recharts necesita colores directos)
+const COLOR = {
+  linea: '#0b6e79',
+  seguro: '#2fae66',
+  precaucion: '#d99a1e',
+  peligro: '#e0483f',
+  rejilla: '#dbe3e2',
+  texto: '#4e6268',
 };
 
-export default GraficaSensor;
+function Globo({ active, payload }: TooltipProps<number, string>) {
+  if (!active || !payload?.length) return null;
+  const l = payload[0].payload as Lectura;
+  const p = aPorcentaje(l.voltage);
+  const nivel = nivelDe(p);
+  return (
+    <div className="chart-tip" data-nivel={nivel}>
+      <time>{formatoHora(l.timestamp)}</time>
+      <strong className="num">{l.voltage.toFixed(2)} V</strong>
+      <span className="badge">{NIVELES[nivel].nombre}, {Math.round(p)}%</span>
+    </div>
+  );
+}
+
+export default function GraficaSensor({ datos, compacta = false }: Props) {
+  const v1 = voltajeDeUmbral(UMBRAL_PRECAUCION);
+  const v2 = voltajeDeUmbral(UMBRAL_PELIGRO);
+
+  return (
+    <div className={`chart ${compacta ? 'chart--compacta' : ''}`}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={datos} margin={{ top: 12, right: 12, bottom: 0, left: -12 }}>
+          <defs>
+            <linearGradient id="relleno" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={COLOR.linea} stopOpacity={0.28} />
+              <stop offset="100%" stopColor={COLOR.linea} stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+
+          {/* Bandas de nivel: el fondo dice si la lectura es segura */}
+          <ReferenceArea y1={0} y2={v1} fill={COLOR.seguro} fillOpacity={0.07} ifOverflow="hidden" />
+          <ReferenceArea y1={v1} y2={v2} fill={COLOR.precaucion} fillOpacity={0.09} ifOverflow="hidden" />
+          <ReferenceArea y1={v2} y2={VOLTAJE_MAX + 0.2} fill={COLOR.peligro} fillOpacity={0.08} ifOverflow="hidden" />
+          <ReferenceLine
+            y={v2}
+            stroke={COLOR.peligro}
+            strokeDasharray="4 4"
+            label={{ value: 'Peligro', position: 'insideTopRight', fill: COLOR.peligro, fontSize: 12 }}
+          />
+
+          <CartesianGrid stroke={COLOR.rejilla} vertical={false} />
+          <XAxis
+            dataKey="timestamp"
+            tickFormatter={(t) => formatoHora(t).slice(0, 5)}
+            tick={{ fontSize: 12, fill: COLOR.texto }}
+            tickLine={false}
+            axisLine={{ stroke: COLOR.rejilla }}
+            minTickGap={compacta ? 40 : 28}
+          />
+          <YAxis
+            domain={[0, 3.5]}
+            ticks={[0, 1, 2, 3]}
+            tickFormatter={(v) => `${v} V`}
+            tick={{ fontSize: 12, fill: COLOR.texto }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip content={<Globo />} cursor={{ stroke: COLOR.texto, strokeDasharray: '3 3' }} />
+          <Area
+            type="monotone"
+            dataKey="voltage"
+            stroke={COLOR.linea}
+            strokeWidth={2.5}
+            fill="url(#relleno)"
+            dot={false}
+            activeDot={{ r: 5, strokeWidth: 2, stroke: '#ffffff' }}
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}

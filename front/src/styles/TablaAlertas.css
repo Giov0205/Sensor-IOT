@@ -1,45 +1,144 @@
-.alerta-wrapper {
-    background: white;
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
+/* ==========================================================
+   Tabla de episodios de alerta
+   Celular: cada fila es una tarjeta. Tablet+: tabla normal.
+   ========================================================== */
+
+.alerts {
+  width: 100%;
+  border-collapse: collapse;
+}
+.alerts thead {
+  display: none;
+}
+.alerts tbody {
+  display: grid;
+  gap: var(--space-3);
+}
+.alerts tr {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-danger-vivid);
+  border-radius: var(--radius-md);
+  animation: rise var(--duration-base) var(--ease-out) both;
+}
+.alerts tr:nth-child(2) { animation-delay: 40ms; }
+.alerts tr:nth-child(3) { animation-delay: 80ms; }
+.alerts tr:nth-child(4) { animation-delay: 120ms; }
+.alerts tr:nth-child(5) { animation-delay: 160ms; }
+.alerts tr:nth-child(6) { animation-delay: 200ms; }
+
+.alerts td {
+  display: grid;
+  gap: 2px;
+  font-size: var(--text-md);
+}
+.alerts td::before {
+  content: attr(data-label);
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+.alerts__when {
+  grid-column: 1 / -1;
+}
+.alerts__when strong {
+  font-size: var(--text-xl);
+}
+.alerts__when span {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.alerts__peak {
+  display: grid;
+  gap: var(--space-1);
+}
+.alerts__peak small {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+.alerts__meter {
+  display: block;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  overflow: hidden;
+}
+.alerts__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-danger-vivid);
+}
+
+@media (min-width: 768px) {
+  .alerts {
+    display: table;
   }
-  
-  .alerta-titulo {
-    text-align: center;
-    color: #1e293b;
-    font-size: 22px;
-    margin-bottom: 20px;
+  .alerts thead {
+    display: table-header-group;
   }
-  
-  .alerta-tabla {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'Poppins', sans-serif;
+  .alerts tbody {
+    display: table-row-group;
   }
-  
-  .alerta-tabla th,
-  .alerta-tabla td {
-    padding: 12px 16px;
-    border-bottom: 1px solid #e5e7eb;
+  .alerts tr {
+    display: table-row;
+    border: 0;
+    animation: none;
+  }
+  .alerts th {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
     text-align: left;
   }
-  
-  .alerta-tabla th {
-    background-color: #f1f5f9;
-    color: #1e293b;
-    font-weight: 600;
+  .alerts td {
+    display: table-cell;
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
   }
-  
-  .alerta-tabla tr:hover {
-    background-color: #fef2f2;
+  .alerts td::before {
+    content: none;
   }
-  
-  .peligroso {
-    color: #dc2626;
-    font-weight: bold;
+  .alerts tbody tr {
+    transition: background-color var(--duration-fast) var(--ease-out);
   }
-  
+  .alerts tbody tr:hover {
+    background: color-mix(in srgb, var(--color-danger-soft) 45%, transparent);
+  }
+  .alerts td:first-child {
+    box-shadow: inset 4px 0 0 var(--color-danger-vivid);
+  }
+  .alerts__when {
+    gap: 0;
+  }
+  .alerts__when strong {
+    font-size: var(--text-lg);
+  }
+  .alerts__peak small {
+    display: inline;
+  }
+  .alerts__peak {
+    grid-template-columns: 120px auto;
+    align-items: center;
+    gap: var(--space-3);
+  }
+}
+
+/* Esqueleto de carga */
+.alertas__skeleton {
+  display: grid;
+  gap: var(--space-3);
+}
+.alertas__skeleton .skeleton {
+  height: 72px;
+  border-radius: var(--radius-md);
+}

@@ -1,129 +1,131 @@
-/* Global Styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
+/* ==========================================================
+   Pantallas de acceso (Login y Registro)
+   ========================================================== */
+
+.auth {
+  display: grid;
+  min-height: 100dvh;
+  background: var(--color-bg);
 }
 
-/* El fondo ahora solo se aplica dentro del contenedor login-container */
-.login-container {
+.auth__aside {
+  display: none;
+}
+
+.auth__main {
+  display: grid;
+  place-items: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+.auth__card {
   width: 100%;
-  max-width: 600px;
-  background: linear-gradient(90deg, #ff5f6d, #ffc3a0);
-  padding: 3rem;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  border: 1px solid #e0e0e0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  animation: fadeIn 1s forwards;
-  animation-delay: 0.5s;
-  min-height: 100vh;
+  max-width: 420px;
+  display: grid;
+  gap: var(--space-4);
+  animation: rise var(--duration-slow) var(--ease-out);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.auth__brand-mobile {
+  margin-bottom: var(--space-4);
 }
 
-h1 {
+.auth__title {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: -0.03em;
+}
+.auth__subtitle {
+  margin-top: calc(var(--space-2) * -1);
+  color: var(--color-text-muted);
+}
+
+.auth__form {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--space-2);
+}
+.auth__form .btn {
+  margin-top: var(--space-2);
+}
+
+.auth__foot {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
   text-align: center;
-  font-size: 2.5rem;
-  color: #ff5f6d;
-  margin-bottom: 1.5rem;
-  font-weight: 600;
-  letter-spacing: 1px;
+}
+.auth__foot a {
+  font-weight: var(--weight-bold);
+  text-underline-offset: 3px;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.input-group {
-  margin-bottom: 1.5rem;
-}
-
-label {
-  font-size: 1rem;
-  color: #333;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-}
-
-.input-with-icon {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
-.input-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: #ff5f6d;
-  position: absolute;
-  left: 10px;
-}
-
-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  padding-left: 2.5rem;
-  border-radius: 8px;
-  border: 2px solid #ff5f6d;
-  font-size: 1.1rem;
-  outline: none;
-  transition: border-color 0.3s ease-in-out;
-}
-
-input:focus {
-  border-color: #ffc3a0;
-}
-
-input:invalid {
-  border-color: #ff0000;
-}
-
-button {
-  background-color: #ff5f6d;
-  color: white;
-  padding: 1rem;
-  font-size: 1.2rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  width: 100%;
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-button:hover {
-  background-color: #ffc3a0;
-}
-
-span {
-  font-size: 0.9rem;
-  color: #ff0000;
-  margin-top: 0.5rem;
-}
-
-@media screen and (max-width: 500px) {
-  .login-container {
-    padding: 1.5rem;
-    width: 90%;
+/* Panel lateral con el mapa de isobaras (tablet horizontal y escritorio) */
+@media (min-width: 1024px) {
+  .auth {
+    grid-template-columns: minmax(420px, 1fr) minmax(480px, 1fr);
   }
 
-  h1 {
-    font-size: 1.8rem;
+  .auth__aside {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--space-10);
+    overflow: hidden;
+    background: var(--color-ink);
+    color: var(--color-text-inverse);
   }
 
-  input, button {
-    font-size: 1rem;
+  .auth__map {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 130%;
+    max-width: none;
+    transform: translate(-50%, -54%);
+  }
+  .auth__map path {
+    fill: none;
+    stroke: var(--color-glow);
+    stroke-width: 1.2;
+    opacity: calc(0.9 - var(--i) * 0.085);
+    stroke-dasharray: 2400;
+    stroke-dashoffset: 2400;
+    animation: draw 1.6s var(--ease-out) forwards;
+    animation-delay: calc(var(--i) * 90ms);
+  }
+  .auth__map circle {
+    fill: var(--color-glow);
+  }
+
+  .auth__claim {
+    position: relative;
+    max-width: 30ch;
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-medium);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  .auth__brand-mobile {
+    display: none;
+  }
+
+  .auth__main {
+    padding: var(--space-12);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth__map path {
+    stroke-dashoffset: 0;
   }
 }

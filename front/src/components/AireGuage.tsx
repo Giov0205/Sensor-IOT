@@ -1,110 +1,146 @@
-import { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
+import { useMemo } from 'react';
 import {
-  CircularProgressbar,
-  buildStyles
-} from 'react-circular-progressbar';
-import 'react-circular-progressbar/dist/styles.css';
+  UMBRAL_PELIGRO,
+  UMBRAL_PRECAUCION,
+  type Nivel,
+} from '../lib/niveles';
+import { cssVars } from '../lib/css';
 
-const AireGauge = () => {
-  const [valor, setValor] = useState(0);
-  const [mostrarAlerta, setMostrarAlerta] = useState(false);
-  const alertaSonando = useRef(false);
-  const audioRef = useRef(new Audio('/sounds/alarma.mp3')); // 🔊 Ruta al sonido
+interface Props {
+  porcentaje: number | null;
+  voltaje: number | null;
+  nivel: Nivel;
+}
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get('http://10.1.1.83:4000/api/sensores', {
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
-        });
+const C = 160; // centro del SVG
+const R_ESCALA = 146;
+const INICIO = 135; // grados, el arco cubre 270°
+const BARRIDO = 270;
+const ANILLOS = [34, 54, 74, 94, 114];
 
-        const datos = res.data;
-        if (datos.length > 0) {
-          const ultimo = parseFloat(datos[0].voltage);
-          const porcentaje = Math.min(100, Math.max(0, (ultimo / 3.3) * 100));
-          setValor(porcentaje);
-
-          if (porcentaje >= 66) {
-            setMostrarAlerta(true);
-
-            // Solo sonar si no está ya sonando
-            if (!alertaSonando.current) {
-              alertaSonando.current = true;
-              audioRef.current.play();
-            }
-          } else {
-            setMostrarAlerta(false);
-            alertaSonando.current = false;
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-          }
-        }
-      } catch (err) {
-        console.error('Error al obtener datos del sensor:', err);
-      }
-    };
-
-    fetchData();
-    const intervalo = setInterval(fetchData, 1000);
-    return () => clearInterval(intervalo);
-  }, []);
-
-  const getColor = (val: number) => {
-    if (val < 33) return '#22c55e';
-    if (val < 66) return '#eab308';
-    return '#ef4444';
-  };
-
-  const getTexto = (val: number) => {
-    if (val < 33) return 'Bueno';
-    if (val < 66) return 'Regular';
-    return '¡Peligro!';
-  };
-
-  return (
-    <div style={{ width: 200, position: 'relative' }}>
-      {mostrarAlerta && (
-        <div style={{
-          position: 'absolute',
-          top: -100,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: '#ef4444',
-          color: 'white',
-          padding: '12px 20px',
-          borderRadius: '10px',
-          fontWeight: 'bold',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          zIndex: 999
-        }}>
-          ⚠️ ¡ALERTA! GAS DETECTADO
-        </div>
-      )}
-
-      <CircularProgressbar
-        value={valor}
-        maxValue={100}
-        text={`${valor.toFixed(0)}%`}
-        styles={buildStyles({
-          textColor: '#1e293b',
-          pathColor: getColor(valor),
-          trailColor: '#e5e7eb',
-        })}
-      />
-      <p style={{
-        textAlign: 'center',
-        marginTop: '10px',
-        fontWeight: 'bold',
-        fontSize: '16px',
-        color: getColor(valor),
-      }}>
-        Estatus: {getTexto(valor)}
-      </p>
-    </div>
-  );
+const polar = (radio: number, grados: number) => {
+  const rad = (grados * Math.PI) / 180;
+  return [C + radio * Math.cos(rad), C + radio * Math.sin(rad)];
 };
 
-export default AireGauge;
+const arco = (radio: number, desde: number, hasta: number) => {
+  const [x1, y1] = polar(radio, desde);
+  const [x2, y2] = polar(radio, hasta);
+  const grande = hasta - desde > 180 ? 1 : 0;
+  return `M ${x1} ${y1} A ${radio} ${radio} 0 ${grande} 1 ${x2} ${y2}`;
+};
+
+/** Curva cerrada ondulada: más gas = más turbulencia en las isobaras. */
+const isobara = (radio: number, indice: number, intensidad: number) => {
+  const puntos = 72;
+  const amp = 0.015 + 0.075 * intensidad;
+  const fase = indice * 1.3;
+  let d = '';
+  for (let k = 0; k <= puntos; k++) {
+    const t = (k / puntos) * Math.PI * 2;
+    const r =
+      radio *
+      (1 +
+        amp * Math.sin(3 * t + fase) +
+        amp * 0.6 * Math.sin(5 * t - fase * 1.7) +
+        amp * 0.3 * Math.cos(2 * t + fase * 0.5));
+    const x = C + r * Math.cos(t);
+    const y = C + r * Math.sin(t);
+    d += `${k === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)} `;
+  }
+  return `${d}Z`;
+};
+
+/** Medidor principal de AirGuard (antes: gauge circular genérico). */
+export default function AireGauge({ porcentaje, voltaje, nivel }: Props) {
+  const valor = porcentaje ?? 0;
+  const intensidad = valor / 100;
+
+  const anillos = useMemo(
+    () => ANILLOS.map((r, i) => isobara(r, i, intensidad)),
+    // redondeado para no recalcular por décimas
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [Math.round(valor)]
+  );
+
+  // Cuántos anillos se "llenan" (desde el centro hacia afuera)
+  const llenos = Math.ceil((valor / 100) * ANILLOS.length);
+
+  const marcas = Array.from({ length: 21 }, (_, i) => i * 5);
+  const anguloDe = (p: number) => INICIO + (p / 100) * BARRIDO;
+
+  return (
+    <figure className="gauge" data-nivel={nivel}>
+      <svg
+        className="gauge__svg"
+        viewBox="0 0 320 320"
+        role="img"
+        aria-label={
+          porcentaje === null
+            ? 'Sin lecturas del sensor'
+            : `Concentración de gas ${Math.round(valor)} por ciento`
+        }
+      >
+        {/* Isobaras */}
+        <g className="gauge__rings">
+          {anillos
+            .map((d, i) => ({ d, i }))
+            .reverse()
+            .map(({ d, i }) => (
+              <path
+                key={i}
+                d={d}
+                className={`gauge__ring ${i < llenos ? 'is-on' : ''}`}
+                style={cssVars({ '--i': i })}
+              />
+            ))}
+        </g>
+
+        {/* Escala */}
+        <path className="gauge__track" d={arco(R_ESCALA, INICIO, INICIO + BARRIDO)} />
+        <path
+          className="gauge__fill"
+          d={arco(R_ESCALA, INICIO, INICIO + BARRIDO)}
+          pathLength={100}
+          style={{ strokeDashoffset: 100 - valor }}
+        />
+
+        {marcas.map((p) => {
+          // no dibujar marcas pegadas a las líneas de umbral
+          const umbral =
+            Math.abs(p - UMBRAL_PRECAUCION) < 3 || Math.abs(p - UMBRAL_PELIGRO) < 3;
+          const [x1, y1] = polar(R_ESCALA - 12, anguloDe(p));
+          const [x2, y2] = polar(R_ESCALA - (p % 25 === 0 ? 20 : 16), anguloDe(p));
+          return umbral ? null : (
+            <line key={p} x1={x1} y1={y1} x2={x2} y2={y2} className="gauge__tick" />
+          );
+        })}
+
+        {[UMBRAL_PRECAUCION, UMBRAL_PELIGRO].map((p) => {
+          const [x1, y1] = polar(R_ESCALA + 8, anguloDe(p));
+          const [x2, y2] = polar(R_ESCALA - 22, anguloDe(p));
+          return (
+            <line
+              key={`u${p}`}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              className={`gauge__threshold gauge__threshold--${p === UMBRAL_PELIGRO ? 'peligro' : 'precaucion'}`}
+            />
+          );
+        })}
+      </svg>
+
+      <figcaption className="gauge__readout">
+        <span className="gauge__value num">
+          {porcentaje === null ? '––' : Math.round(valor)}
+          <small>%</small>
+        </span>
+        <span className="gauge__volt num">
+          {voltaje === null ? 'sin lectura' : `${voltaje.toFixed(2)} V`}
+        </span>
+      </figcaption>
+    </figure>
+  );
+}

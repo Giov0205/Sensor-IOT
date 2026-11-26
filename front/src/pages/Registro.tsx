@@ -1,96 +1,123 @@
-import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
-import api from "../config/axios";
-import { isAxiosError } from "axios";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons'; // Iconos de nombre, email y contraseña
-import '../styles/Register.css'; 
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { CircleAlert, LoaderCircle, Lock, Mail, User, UserPlus } from 'lucide-react';
+import api from '../config/axios';
+import AuthLayout from '../components/AuthLayout';
+import Campo from '../components/Campo';
+import { mensajeDeError } from '../lib/errores';
+import '../styles/Register.css';
+
+interface FormRegistro {
+  nombre: string;
+  email: string;
+  password: string;
+}
+
+const MIN = 8; // el backend pide mínimo 8 caracteres
 
 export default function Registro() {
+  const navigate = useNavigate();
+  const [errorServidor, setErrorServidor] = useState('');
 
-    const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormRegistro>({ defaultValues: { nombre: '', email: '', password: '' } });
 
-    const initialValues = {
-        nombre: '',
-        email: '',
-        password: ''
+  const largo = watch('password')?.length ?? 0;
+  const progreso = Math.min(100, (largo / MIN) * 100);
+
+  const handleRegister = async (formData: FormRegistro) => {
+    setErrorServidor('');
+    try {
+      await api.post('/auth/crear-cuenta', formData);
+      navigate('/', { replace: true, state: { registrado: true } });
+    } catch (error) {
+      setErrorServidor(mensajeDeError(error, 'No se pudo crear la cuenta. Intenta de nuevo.'));
     }
+  };
 
-    const { register, handleSubmit, formState: { errors } } = useForm({ defaultValues: initialValues });
+  return (
+    <AuthLayout
+      titulo="Crea tu cuenta"
+      subtitulo="Con tu cuenta podrás ver lecturas, alertas y ajustar la alarma."
+      pie={
+        <p>
+          ¿Ya tienes cuenta? <Link to="/">Inicia sesión</Link>
+        </p>
+      }
+    >
+      {errorServidor && (
+        <p className="notice notice--danger" role="alert">
+          <CircleAlert aria-hidden="true" />
+          {errorServidor}
+        </p>
+      )}
 
-    const handleRegister = async (formData: any) => {
-        try {
-            const { data } = await api.post(`/auth/crear-cuenta`, formData);
-            console.log(data);
-            setTimeout(() => {
-                // Redirigir al login (ruta "/") después de registrarse
-                navigate('/');
-            }, 1000);
-        } catch (error) {
-            if (isAxiosError(error) && error.response) {
-                console.log(error.response.data.error);
-            }
-        }
-    }
-
-    return (
-        <div className="login-container">
-            <h1>Registro</h1>
-            <form onSubmit={handleSubmit(handleRegister)}>
-                <div className="input-group">
-                    <label htmlFor="nombre">Nombre</label>
-                    <div className="input-with-icon">
-                        <FontAwesomeIcon icon={faUser} className="input-icon" />
-                        <input
-                            type="text"
-                            id="nombre"
-                            {...register('nombre', {
-                                required: 'El nombre es requerido'
-                            })}
-                        />
-                    </div>
-                    {errors.nombre && <span>{errors.nombre.message}</span>}
-                </div>
-                <div className="input-group">
-                    <label htmlFor="email">Email</label>
-                    <div className="input-with-icon">
-                        <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
-                        <input
-                            type="email"
-                            id="email"
-                            {...register('email', {
-                                required: 'El email es requerido',
-                                pattern: {
-                                    value: /\S+@\S+\.\S+/,
-                                    message: 'Email inválido'
-                                }
-                            })}
-                        />
-                    </div>
-                    {errors.email && <span>{errors.email.message}</span>}
-                </div>
-                <div className="input-group">
-                    <label htmlFor="password">Contraseña</label>
-                    <div className="input-with-icon">
-                        <FontAwesomeIcon icon={faLock} className="input-icon" />
-                        <input
-                            type="password"
-                            id="password"
-                            {...register('password', {
-                                required: 'La contraseña es requerida',
-                            })}
-                        />
-                    </div>
-                    {errors.password && <span>{errors.password.message}</span>}
-                </div>
-                <div>
-                    <button type="submit">Registrarse</button>
-                </div>
-            </form>
-
-            <div className="login-link">
-                <p>¿Ya tienes cuenta? <a href="/">Inicia sesión</a></p>
+      <form className="auth__form" onSubmit={handleSubmit(handleRegister)} noValidate>
+        <Campo
+          id="nombre"
+          label="Nombre"
+          icon={User}
+          autoComplete="name"
+          placeholder="Tu nombre"
+          error={errors.nombre?.message}
+          {...register('nombre', { required: 'Escribe tu nombre' })}
+        />
+        <Campo
+          id="email"
+          label="Correo"
+          type="email"
+          icon={Mail}
+          autoComplete="email"
+          inputMode="email"
+          placeholder="tu@correo.com"
+          error={errors.email?.message}
+          {...register('email', {
+            required: 'Escribe tu correo',
+            pattern: { value: /\S+@\S+\.\S+/, message: 'Ese correo no es válido' },
+          })}
+        />
+        <Campo
+          id="password"
+          label="Contraseña"
+          type="password"
+          icon={Lock}
+          autoComplete="new-password"
+          error={errors.password?.message}
+          hint={
+            <div className={`pass-meter ${largo >= MIN ? 'is-ok' : ''}`}>
+              <span className="pass-meter__bar" aria-hidden="true">
+                <span style={{ transform: `scaleX(${progreso / 100})` }} />
+              </span>
+              <span className="pass-meter__text">
+                {largo >= MIN ? 'Longitud correcta' : `Mínimo ${MIN} caracteres (${largo}/${MIN})`}
+              </span>
             </div>
-        </div>
-    )
+          }
+          {...register('password', {
+            required: 'Escribe una contraseña',
+            minLength: { value: MIN, message: `Usa al menos ${MIN} caracteres` },
+          })}
+        />
+
+        <button type="submit" className="btn btn--lg btn--block" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <LoaderCircle className="spin" aria-hidden="true" />
+              Creando cuenta…
+            </>
+          ) : (
+            <>
+              <UserPlus aria-hidden="true" />
+              Crear cuenta
+            </>
+          )}
+        </button>
+      </form>
+    </AuthLayout>
+  );
 }

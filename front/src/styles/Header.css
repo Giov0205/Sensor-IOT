@@ -1,46 +1,152 @@
-.main-header {
-    position: fixed;
-    top: 0;
-    left: 60px; /* mismo ancho del sidebar */
-    right: 0;
-    height: 60px;
-    background: #1e293b;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 24px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    z-index: 999;
+/* ==========================================================
+   Barra superior
+   ========================================================== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-nav);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--topbar-height);
+  padding: var(--space-2) var(--space-4);
+  background: rgb(238 242 241 / 0.86);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.topbar__title {
+  display: none;
+}
+
+.topbar__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* El cierre de sesión vive en el riel en tablet/escritorio */
+.topbar__logout {
+  display: inline-grid;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.icon-btn:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+.icon-btn:active {
+  transform: scale(0.94);
+}
+.icon-btn[aria-pressed="false"] {
+  color: var(--color-danger);
+}
+
+/* Indicador en vivo */
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+.live__dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
+}
+.live--en-linea .live__dot {
+  background: var(--color-success-vivid);
+}
+.live--en-linea .live__dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-success-vivid);
+  animation: live-pulse 2s var(--ease-out) infinite;
+}
+.live--sin-conexion {
+  color: var(--color-danger);
+  border-color: rgb(185 48 42 / 0.35);
+  background: var(--color-danger-soft);
+}
+.live--sin-conexion .live__dot {
+  background: var(--color-danger);
+}
+/* En celular se muestra el texto corto */
+.live__text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .topbar {
+    padding: var(--space-3) var(--space-6);
   }
-  
-  .header-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: #f87171;
-    margin: 0;
+  .topbar__brand {
+    display: none;
   }
-  
-  .logout-btn {
-    background-color: transparent;
-    border: 1px solid #f87171;
-    color: #f87171;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.3s ease;
+  .topbar__title {
+    display: block;
   }
-  
-  .logout-btn:hover {
-    background-color: #f87171;
-    color: white;
+  .topbar__title h1 {
+    font-size: var(--text-xl);
   }
-  
-  .logout-icon {
-    width: 18px;
-    height: 18px;
+  .topbar__title p {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
   }
-  
+  .topbar__logout {
+    display: none;
+  }
+  .live__text {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+  .live__short {
+    display: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .topbar {
+    padding: var(--space-4) var(--space-10);
+  }
+}
