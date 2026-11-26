@@ -1,0 +1,150 @@
+/* ==========================================================
+   AirGuard · Design tokens
+   Único lugar donde viven colores, tipografía, espaciado,
+   radios, sombras, capas y tiempos de animación.
+   Breakpoints (usar siempre los mismos):
+     640px celular grande · 768px tablet · 1024px laptop · 1280px escritorio
+   ========================================================== */
+
+:root {
+  /* ---- Color base: niebla + tinta petróleo ---- */
+  --color-bg: #eef2f1;
+  --color-surface: #ffffff;
+  --color-surface-2: #e4eae9;
+  --color-border: #cbd5d4;
+  --color-border-strong: #9fb0b0;
+  --color-text: #0f2228;
+  --color-text-muted: #4e6268;
+  --color-text-inverse: #e9f1f0;
+  --color-text-inverse-muted: #9db3b5;
+
+  --color-ink: #0f2228;
+  --color-ink-2: #183339;
+  --color-ink-3: #24444b;
+  --color-glow: #6fd3cf; /* acento sobre la tinta */
+  --color-white: #ffffff;
+  --color-placeholder: #7f9195;
+  --color-skeleton-shine: #f1f5f4;
+
+  /* ---- Primario: verde azulado "oxígeno" ---- */
+  --color-primary: #0b6e79;
+  --color-primary-hover: #095a63;
+  --color-primary-soft: #d3e8e9;
+  --color-on-primary: #ffffff;
+
+  /* ---- Estados (mismo significado en toda la app) ---- */
+  --color-success: #1e7f47;
+  --color-success-vivid: #2fae66;
+  --color-success-soft: #d5eedd;
+  --color-success-ink: #134f2c;
+
+  --color-warning: #8f5d00;
+  --color-warning-vivid: #d99a1e;
+  --color-warning-soft: #f6e7c6;
+
+  --color-danger: #b9302a;
+  --color-danger-vivid: #e0483f;
+  --color-danger-soft: #f6d9d6;
+  --color-danger-hover: #9b2620;
+  --color-danger-ink: #7a1e19;
+  --color-danger-tint: #fbe9e7;
+  --color-bg-alarm: #f5eceb;
+
+  --color-info: #2f5da8;
+  --color-info-soft: #dbe5f5;
+
+  /* Nivel activo (lo cambia data-nivel) */
+  --nivel: var(--color-primary);
+  --nivel-vivid: var(--color-primary);
+  --nivel-soft: var(--color-primary-soft);
+
+  /* ---- Tipografía ---- */
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+
+  --text-xs: 0.75rem;   /* 12 */
+  --text-sm: 0.875rem;  /* 14 */
+  --text-md: 1rem;      /* 16 */
+  --text-lg: 1.25rem;   /* 20 */
+  --text-xl: 1.5rem;    /* 24 */
+  --text-2xl: 2rem;     /* 32 */
+  --text-3xl: clamp(2.25rem, 1.6rem + 2.4vw, 3rem);
+  --text-hero: clamp(3.5rem, 2.4rem + 5vw, 6rem);
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-tight: 1.2;
+  --leading-body: 1.5;
+
+  /* ---- Espaciado (escala de 4px) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---- Radios (por jerarquía) ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 28px;
+  --radius-full: 999px;
+
+  /* ---- Sombras (tintadas con la tinta, no gris genérico) ---- */
+  --shadow-sm: 0 1px 2px rgb(15 34 40 / 0.06);
+  --shadow-md: 0 6px 18px -6px rgb(15 34 40 / 0.14);
+  --shadow-lg: 0 24px 48px -20px rgb(15 34 40 / 0.28);
+
+  /* ---- Capas ---- */
+  --z-nav: 100;
+  --z-dropdown: 200;
+  --z-banner: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+
+  /* ---- Movimiento ---- */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --duration-data: 400ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  /* ---- Medidas de layout ---- */
+  --rail-width: 232px;
+  --topbar-height: 64px;
+  --tabbar-height: 68px;
+  --content-max: 1180px;
+  --tap-min: 44px;
+}
+
+/* Paleta por nivel de aire */
+[data-nivel="seguro"] {
+  --nivel: var(--color-success);
+  --nivel-vivid: var(--color-success-vivid);
+  --nivel-soft: var(--color-success-soft);
+}
+[data-nivel="precaucion"] {
+  --nivel: var(--color-warning);
+  --nivel-vivid: var(--color-warning-vivid);
+  --nivel-soft: var(--color-warning-soft);
+}
+[data-nivel="peligro"] {
+  --nivel: var(--color-danger);
+  --nivel-vivid: var(--color-danger-vivid);
+  --nivel-soft: var(--color-danger-soft);
+}
+[data-nivel="sin-datos"] {
+  --nivel: var(--color-text-muted);
+  --nivel-vivid: var(--color-border-strong);
+  --nivel-soft: var(--color-surface-2);
+}

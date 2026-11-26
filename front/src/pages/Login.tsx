@@ -1,85 +1,103 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import api from "../config/axios";
-import { isAxiosError } from "axios";
-import '../styles/Login.css';
+import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { CircleAlert, CircleCheck, LoaderCircle, Lock, LogIn, Mail } from 'lucide-react';
+import api from '../config/axios';
+import AuthLayout from '../components/AuthLayout';
+import Campo from '../components/Campo';
+import { guardarToken } from '../lib/sesion';
+import { mensajeDeError } from '../lib/errores';
+
+interface FormLogin {
+  email: string;
+  password: string;
+}
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const recienRegistrado = Boolean((location.state as { registrado?: boolean } | null)?.registrado);
+  const [errorServidor, setErrorServidor] = useState('');
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: {
-      email: '',
-      password: ''
-    }
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormLogin>({ defaultValues: { email: '', password: '' } });
 
-  const handleLogin = async (formData: any) => {
+  const handleLogin = async (formData: FormLogin) => {
+    setErrorServidor('');
     try {
-      const { data } = await api.post(`/auth/login`, formData);
-      localStorage.setItem('TOKEN', data);
-      console.log('Iniciando sesión...');
-
-      setTimeout(() => {
-        navigate('/home');
-        window.location.reload();
-      }, 1000);
-    } catch (error: any) {
-      if (isAxiosError(error) && error.response) {
-        console.log(error.response.data.error);
-      }
+      const { data } = await api.post('/auth/login', formData);
+      guardarToken(typeof data === 'string' ? data : String(data?.token ?? data));
+      navigate('/home', { replace: true });
+    } catch (error) {
+      setErrorServidor(mensajeDeError(error, 'No se pudo iniciar sesión. Intenta de nuevo.'));
     }
   };
 
   return (
-    <div className="login-wrapper">
-      <div className="login-container">
-        <h1>Iniciar Sesión</h1>
+    <AuthLayout
+      titulo="Inicia sesión"
+      subtitulo="Entra para ver la calidad del aire en tiempo real."
+      pie={
+        <p>
+          ¿No tienes cuenta? <Link to="/registro">Crear cuenta</Link>
+        </p>
+      }
+    >
+      {recienRegistrado && !errorServidor && (
+        <p className="notice notice--success" role="status">
+          <CircleCheck aria-hidden="true" />
+          Cuenta creada. Ahora inicia sesión con tu correo.
+        </p>
+      )}
+      {errorServidor && (
+        <p className="notice notice--danger" role="alert">
+          <CircleAlert aria-hidden="true" />
+          {errorServidor}
+        </p>
+      )}
 
-        <form onSubmit={handleSubmit(handleLogin)}>
-          <div className="input-group">
-            <label htmlFor="email">Email</label>
-            <div className="input-with-icon">
-              <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
-              <input
-                type="email"
-                id="email"
-                {...register('email', {
-                  required: 'El correo es obligatorio',
-                  pattern: {
-                    value: /\S+@\S+\.\S+/,
-                    message: 'Correo inválido'
-                  }
-                })}
-              />
-            </div>
-            {errors.email && <span>{errors.email.message}</span>}
-          </div>
+      <form className="auth__form" onSubmit={handleSubmit(handleLogin)} noValidate>
+        <Campo
+          id="email"
+          label="Correo"
+          type="email"
+          icon={Mail}
+          autoComplete="email"
+          inputMode="email"
+          placeholder="tu@correo.com"
+          error={errors.email?.message}
+          {...register('email', {
+            required: 'Escribe tu correo',
+            pattern: { value: /\S+@\S+\.\S+/, message: 'Ese correo no es válido' },
+          })}
+        />
+        <Campo
+          id="password"
+          label="Contraseña"
+          type="password"
+          icon={Lock}
+          autoComplete="current-password"
+          error={errors.password?.message}
+          {...register('password', { required: 'Escribe tu contraseña' })}
+        />
 
-          <div className="input-group">
-            <label htmlFor="password">Contraseña</label>
-            <div className="input-with-icon">
-              <FontAwesomeIcon icon={faLock} className="input-icon" />
-              <input
-                type="password"
-                id="password"
-                {...register('password', {
-                  required: 'La contraseña es obligatoria'
-                })}
-              />
-            </div>
-            {errors.password && <span>{errors.password.message}</span>}
-          </div>
-
-          <button type="submit">Entrar</button>
-        </form>
-
-        <div className="register-link">
-          <p>¿No tienes cuenta? <a href="/registro">Regístrate ahora</a></p>
-        </div>
-      </div>
-    </div>
+        <button type="submit" className="btn btn--lg btn--block" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <LoaderCircle className="spin" aria-hidden="true" />
+              Entrando…
+            </>
+          ) : (
+            <>
+              <LogIn aria-hidden="true" />
+              Entrar
+            </>
+          )}
+        </button>
+      </form>
+    </AuthLayout>
   );
 }

@@ -1,24 +1,30 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Login from "./pages/Login";
-import Home from "./pages/Home";
-import Registro from "./pages/Registro";
-import Lecturas from "./pages/Lectura"; // ✅ Importa la vista de lecturas
-import Alertas from "./pages/Alertas"; //
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import Login from './pages/Login';
+import Registro from './pages/Registro';
+import Home from './pages/Home';
+import Lecturas from './pages/Lectura';
+import Alertas from './pages/Alertas';
+import Configuracion from './pages/Configuracion';
+import Layout from './components/Layout';
 
 function Router() {
   return (
-    <>
-      <BrowserRouter>
-        <Routes>
-          {/* Ruta principal apunta al Login */}
-          <Route path="/" element={<Login />} />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
+
+        {/* Pantallas que necesitan sesión iniciada */}
+        <Route element={<Layout />}>
           <Route path="/home" element={<Home />} />
-          <Route path="/registro" element={<Registro />} />
-          <Route path="/lecturas" element={<Lecturas />} /> {/* ✅ Nueva ruta */}
+          <Route path="/lecturas" element={<Lecturas />} />
           <Route path="/alertas" element={<Alertas />} />
-        </Routes>
-      </BrowserRouter>
-    </>
+          <Route path="/config" element={<Configuracion />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

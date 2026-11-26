@@ -1,35 +1,56 @@
-import { useState } from 'react';
-import {
-    Home,
-    Book,
-    AlertCircle,
-    Settings,
-    Menu
-} from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
+import { RUTAS } from '../lib/rutas';
+import Brand from './Brand';
+import { useSensor } from '../context/SensorContext';
+import { cerrarSesion } from '../lib/sesion';
 import '../styles/Sidebar.css';
 
-const Sidebar = () => {
-    const [open, setOpen] = useState(true);
+export default function Sidebar() {
+  const navigate = useNavigate();
+  const { conexion } = useSensor();
 
-    return (
-        <div className={`sidebar ${open ? 'expanded' : 'collapsed'}`}>
-            <button className="menu-toggle" onClick={() => setOpen(!open)}>
-                <Menu size={20} />
-            </button>
+  const salir = () => {
+    cerrarSesion();
+    navigate('/', { replace: true });
+  };
 
-            <div className="logo-section">
-                <div className="logo-dot"></div>
-                {open && <h1 className="sidebar-title">AirGuard</h1>}
-            </div>
+  return (
+    <nav className="rail" aria-label="Navegación principal">
+      <div className="rail__brand">
+        <Brand inversa />
+      </div>
 
-            <ul className="nav-list">
-                <li><a href="/home"><Home size={20} /> {open && <span>Inicio</span>}</a></li>
-                <li><a href="/lecturas"><Book size={20} /> {open && <span>Lecturas</span>}</a></li>
-                <li><a href="/alertas"><AlertCircle size={20} /> {open && <span>Alertas</span>}</a></li>
-                <li><a href="/config"><Settings size={20} /> {open && <span>Configuración</span>}</a></li>
-            </ul>
-        </div>
-    );
-};
+      <ul className="rail__list">
+        {RUTAS.map(({ to, label, icon: Icon }) => (
+          <li key={to}>
+            <NavLink to={to} className="rail__link">
+              <Icon aria-hidden="true" />
+              <span>{label}</span>
+            </NavLink>
+          </li>
+        ))}
+      </ul>
 
-export default Sidebar;
+      <div className="rail__footer">
+        <p className={`rail__device rail__device--${conexion}`}>
+          <span className="rail__device-dot" aria-hidden="true" />
+          <span>
+            ESP32
+            <small>
+              {conexion === 'en-linea'
+                ? 'Conectado'
+                : conexion === 'cargando'
+                  ? 'Buscando…'
+                  : 'Sin conexión'}
+            </small>
+          </span>
+        </p>
+        <button type="button" className="rail__logout" onClick={salir}>
+          <LogOut aria-hidden="true" />
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </nav>
+  );
+}
